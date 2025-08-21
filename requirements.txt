@@ -1,2 +1,6 @@
 python-dotenv
 polars
+jupyter
+pyarrow
+pandas
+great-tables
