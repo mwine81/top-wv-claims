@@ -4,3 +4,5 @@ jupyter
 pyarrow
 pandas
 great-tables
+matplotlib
+seaborn
