@@ -2,6 +2,7 @@ import polars as pl
 from polars import col as c
 import polars.selectors as cs
 from helpers import load_medispan
+from ftc import get_ftc_gpis_list
 
 def total_nadac() -> pl.Expr:
     return (c.unit_price.cast(pl.Float64) * c.qty).round(2).alias('nadac')
@@ -51,4 +52,7 @@ def pct_of_total() -> pl.Expr:
 
 def is_esi_reporting() -> pl.Expr:
     return c.source.str.contains('(?i)esi')
+
+def is_ftc() -> pl.Expr:
+    return c.gpi.is_in(get_ftc_gpis_list()).alias('is_ftc')
 

@@ -30,7 +30,7 @@ def load_nadac_table() -> pl.LazyFrame:
     )
 
 
-def load_data(states: list[str] | None = STATE_DATA_SET_STATES, YEARS_RANGE: list[int] =YEAR_RANGE, nadac_tolerance: str = '52w') -> pl.LazyFrame:
+def load_data(states: list[str] | None = STATE_DATA_SET_STATES, YEARS_RANGE: list[int] | None =YEAR_RANGE, nadac_tolerance: str = '52w') -> pl.LazyFrame:
     data = (
         pl.scan_parquet(state_files_to_load(states))
         .pipe(add_medispan, cols_to_add=['gpi'], join_col='ndc')
@@ -39,7 +39,8 @@ def load_data(states: list[str] | None = STATE_DATA_SET_STATES, YEARS_RANGE: lis
         .with_columns(margin())
         # filters
         .filter(c.margin.is_not_null())
-        .filter(c.dos.dt.year().is_in(YEARS_RANGE))
+        # filter for year range if provided
+        .pipe(lambda lf: lf.filter(c.dos.dt.year().is_in(YEARS_RANGE)) if YEARS_RANGE is not None else lf)
         .filter(c.ndc.is_not_null())
     )
     return data

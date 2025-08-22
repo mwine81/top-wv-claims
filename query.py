@@ -3,7 +3,7 @@ import polars as pl
 from polars import col as c
 import polars.selectors as cs
 from console import console
-from expressions import is_esi_reporting, standardize_margin, is_quallent_gpis, is_quallent_ndcs, total_gpi, median_gpi_qty
+from expressions import is_esi_reporting, standardize_margin, is_quallent_gpis, is_quallent_ndcs, total_gpi, median_gpi_qty, is_ftc
 from helpers import load_medispan
 
 
@@ -63,7 +63,21 @@ def calculate_standardized_margin_comparison_quallent():
     .sort(c.difference, descending=True)
     )
 
+
+def ftc_query():
+    return (
+    load_data(states=['wv'], YEARS_RANGE=None)
+    .filter(c.affiliate.is_not_null())
+    .filter(c.ndc.is_not_null())
+    .group_by(c.affiliate, is_ftc())
+    .agg(pl.len().alias('ct'), c.margin.median().round(2).alias('median_margin'))
+    .filter(c.is_ftc.is_not_null())
+    .with_columns((c.ct / c.ct.sum()).round(4).alias('pct_of_total'))
+    .with_columns((c.ct / c.ct.sum().over(c.affiliate)).round(4).alias('pct_of_affiliate'))
+    .sort(c.affiliate)
+    )
+
 if __name__ == "__main__":
-    console.log(query_high_low_quantile(0.01,0.99).collect(engine='streaming').sort('affiliate'))
+    console.print(ftc_query().collect(engine='streaming'))
     
 
